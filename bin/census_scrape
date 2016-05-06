@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+require 'census_scrape'
+CensusScrape.scrape
