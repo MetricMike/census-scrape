@@ -24,7 +24,7 @@ class Scraper
 
   def scrape
     state_ids = write_state_fields #est 10 minutes
-    write_cd_fields(state_ids) #est +20 minutes
+    # write_cd_fields(state_ids) #est +20 minutes
     # cds = [] # 52 hashes of X sldl
     # states.each do |state|
     #   next if state.nil?
@@ -138,14 +138,20 @@ class Scraper
 
   def write_state_fields
     ids = []
+    state_batch = []
     @@acs_vars.keys.each_slice(49) do |field_group|
+      slice_batch = []
       @@client.where({ fields: field_group.join(','), level: 'STATE' }).map do |state_hash|
         ids << state_hash['state']
+        fg_batch = []
         field_group.map do |f|
-          @csv << [ state_hash['state'], "", "", "", "", "", "", f, @@acs_vars[f]['concept']+@@acs_vars[f]['label'], state_hash[f] ]
+          fg_batch << [ state_hash['state'], "", "", "", "", "", "", f, @@acs_vars[f]['concept']+@@acs_vars[f]['label'], state_hash[f] ]
         end
+        slice_batch << fg_batch.map(&:to_csv)
       end
+      state_batch << slice_batch.flatten
     end
+    @csv << state_batch.flatten
     ids.uniq
   end
 
